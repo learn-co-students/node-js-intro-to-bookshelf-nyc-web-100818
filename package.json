@@ -7,15 +7,27 @@
     "test": "test"
   },
   "scripts": {
-    "test": "export NODE_ENV=testing; mocha -R mocha-multi --reporter-options spec=-,json=.results.json"
+    "test": "export NODE_ENV=testing; mocha -R mocha-multi --reporter-options spec=-,json=.results.json",
+    "start": "export NODE_ENV=development; node run-server.js"
   },
   "devDependencies": {
-    "mocha": "^2.4.5",
-    "mocha-multi": "^0.9.0"
+    "chai": "^4.2.0",
+    "mocha": "^2.5.3",
+    "mocha-multi": "^0.9.1",
+    "supertest": "^3.4.2",
+    "unexpected": "^11.0.1"
   },
   "keywords": [
     "node"
   ],
   "author": "Ethan Miller",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "bookshelf": "^0.14.2",
+    "express": "^4.16.4",
+    "knex": "^0.10.0",
+    "lodash": "^4.17.11",
+    "pg": "^7.8.0"
+  }
 }
