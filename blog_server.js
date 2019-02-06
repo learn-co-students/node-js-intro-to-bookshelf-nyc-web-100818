@@ -15,6 +15,39 @@ const knex = require("knex")(config[process.env.NODE_ENV]);
 const bookshelf = require("bookshelf")(knex);
 
 // This is a good place to start!
+const User = bookshelf.Model.extend({
+  tableName: "users",
+  posts: function() {
+    return this.hasMany(Posts, "author");
+  },
+  comments: function() {
+    return this.hasMany(Comments);
+  }
+});
+
+const Posts = bookshelf.Model.extend({
+  tableName: "posts",
+  comments: function() {
+    return this.hasMany(Comments);
+  },
+  author: function() {
+    return this.belongsTo(User, "author");
+  }
+});
+
+const Comments = bookshelf.Model.extend({
+  tableName: "comments",
+  post: function() {
+    return this.belongsTo(Posts);
+  },
+  user: function() {
+    return this.belongsTo(User);
+  }
+});
+
+exports.User = User;
+exports.Comments = Comments;
+exports.Posts = Posts;
 
 // Exports for Server hoisting.
 const listen = port => {
