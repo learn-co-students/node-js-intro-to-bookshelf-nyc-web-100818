@@ -5,49 +5,118 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const config = require("./knexfile.js");
 
+const User = require("./models/User");
+const Comments = require("./models/Comment");
+const Posts = require("./models/Post");
+
 // Initialize Express.
 const app = express();
 app.use(bodyParser.json());
 
-// Configure & Initialize Bookshelf & Knex.
+// Configure & Initialize Knex.
 console.log("Running in environment: " + process.env.NODE_ENV);
 const knex = require("knex")(config[process.env.NODE_ENV]);
-const bookshelf = require("bookshelf")(knex);
 
 // This is a good place to start!
-const User = bookshelf.Model.extend({
-  tableName: "users",
-  posts: function() {
-    return this.hasMany(Posts, "author");
-  },
-  comments: function() {
-    return this.hasMany(Comments);
+app.post("/user", (req, res) => {
+  const { body } = req;
+  if (typeof body !== "object" || !Object.keys(body).length) {
+    return res.sendStatus(400);
   }
+
+  new User(body)
+    .save()
+    .then(user => {
+      return res.status(200).json(user); // should be 201
+    })
+    .catch(err => {
+      console.log(err);
+      return res.sendStatus(500);
+    });
 });
 
-const Posts = bookshelf.Model.extend({
-  tableName: "posts",
-  comments: function() {
-    return this.hasMany(Comments);
-  },
-  author: function() {
-    return this.belongsTo(User, "author");
-  }
+app.get("/user/:id", (req, res) => {
+  const { params } = req;
+
+  new User({ id: params.id })
+    .fetch()
+    .then(user => {
+      if (!user) {
+        return res.sendStatus(404);
+      }
+      return res.status(200).json(user);
+    })
+    .catch(err => {
+      console.log(err);
+      return res.sendStatus(500);
+    });
 });
 
-const Comments = bookshelf.Model.extend({
-  tableName: "comments",
-  post: function() {
-    return this.belongsTo(Posts);
-  },
-  user: function() {
-    return this.belongsTo(User);
+app.post("/post", (req, res) => {
+  const { body } = req;
+  if (typeof body !== "object" || !Object.keys(body).length) {
+    return res.sendStatus(400);
   }
+
+  new Posts(body)
+    .save()
+    .then(post => {
+      return res.status(200).json(post); // should be 201
+    })
+    .catch(err => {
+      console.log(err);
+      return res.sendStatus(500);
+    });
 });
 
-exports.User = User;
-exports.Comments = Comments;
-exports.Posts = Posts;
+app.get("/post/:id", (req, res) => {
+  const { params } = req;
+
+  new Posts({ id: params.id })
+    .fetch({ withRelated: ["author", "comments"] })
+    .then(post => {
+      if (!post) {
+        return res.sendStatus(404);
+      }
+      return res.status(200).json(post);
+    })
+    .catch(err => {
+      console.log(err);
+      return res.sendStatus(500);
+    });
+});
+
+app.get("/posts", (req, res) => {
+  Posts.collection()
+    .fetch()
+    .then(posts => {
+      if (!posts) {
+        return res.sendStatus(404);
+      }
+      return res.status(200).json(posts);
+    })
+    .catch(err => {
+      console.log(err);
+      return res.sendStatus(500);
+    });
+});
+
+app.post("/comment", (req, res) => {
+  const { body } = req;
+  if (typeof body !== "object" || !Object.keys(body).length) {
+    return res.sendStatus(400);
+  }
+
+  new Comments(body)
+    .save()
+    .then(comment => {
+      return res.status(200).json(comment); // should be 201
+    })
+    .catch(err => {
+      console.log(err);
+      return res.sendStatus(500);
+    });
+});
 
 // Exports for Server hoisting.
 const listen = port => {
@@ -73,3 +142,8 @@ exports.up = justBackend => {
       console.log("Listening on port 3000...");
     });
 };
+
+// exports for tests
+exports.User = User;
+exports.Comments = Comments;
+exports.Posts = Posts;
